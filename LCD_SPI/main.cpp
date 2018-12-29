@@ -29,6 +29,7 @@ void statusBlink (void) {
 
 int main(void)
 {
+	char word[] = "test";
 	DDRD = 1<<LEDEXT;
 	LCD_InitPins();
 
@@ -36,18 +37,11 @@ int main(void)
 	SPI_SetMode3();
 
 	LCD_Init(); // reset and turn on display
+	// LCD_SetupRAM();
 
-	PORTB &= ~(1<<LCD_DC); // set in command mode
-	SPI_MasterTransmit(0b10100101);
-	statusBlink();
-	SPI_MasterTransmit(0xA4);
-	statusBlink();
-	SPI_MasterTransmit(0x02); // reset column start address to 2 - temporary measure for testing
+	LCD_ClearScreen();
 
-	PORTB |= 1<<LCD_DC; // set in transmission mode
-
-	for (int i = 0; i < 128; i++)
-		SPI_MasterTransmit(0xAA);
+	LCD_WriteWord(128 - 4*6, 0, 4, word);
 
 	statusBlink();
     /* Replace with your application code */

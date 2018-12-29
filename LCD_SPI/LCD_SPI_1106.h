@@ -18,6 +18,9 @@
 
 void LCD_InitPins(void);
 void LCD_Init(void);
+void LCD_SetupRAM(void);
+void LCD_ClearScreen(bool on = true);
+void LCD_WriteWord(int x, int y, int length, char* word, bool align = true);
 void LCD_WriteChar(int x, int y, char c);
 
 
