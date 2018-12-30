@@ -29,7 +29,7 @@ void statusBlink (void) {
 
 int main(void)
 {
-	char word[] = "test";
+	char word[] = "testedtestedtestedtestedtestedtestedtestedtestedtestedtestedtestedtestedtestedtestedtestedtestedtestedtestedtestedtestedtestedtestedtestedtestedtestedtestedtestedtestedtested";
 	DDRD = 1<<LEDEXT;
 	LCD_InitPins();
 
@@ -37,11 +37,16 @@ int main(void)
 	SPI_SetMode3();
 
 	LCD_Init(); // reset and turn on display
-	// LCD_SetupRAM();
 
 	LCD_ClearScreen();
 
-	LCD_WriteWord(128 - 4*6, 0, 4, word);
+
+
+	LCD_WriteWord(117, 32, 150, word, false);
+	LCD_WriteChar(1, 18, 'h');
+	LCD_WriteChar(64, 27, 'a');
+	LCD_WriteChar(117, 32, 'm');
+
 
 	statusBlink();
     /* Replace with your application code */

@@ -23,6 +23,21 @@
 	PORTB |= 1<<LCD_DC;
  }
 
+ void LCD_SetColumnStart(int x) {
+	if (x >= 0 && x < 132) {
+		LCD_SetCommandMode();
+		SPI_MasterTransmit(x & 0x0F); // splits into lower and higher 4 nibbles
+		SPI_MasterTransmit(((x & 0xF0) >> 4) + 0x10);
+	}
+ }
+
+ void LCD_SetPageStart(int x) {
+	if (x >= 0 && x < 8) {
+		LCD_SetCommandMode();
+		SPI_MasterTransmit(x + 0xB0);
+	}
+ }
+
  void LCD_InitPins(void) {
 	DDRB |= (1<<LCD_RESET) | (1<<LCD_DC) | (1<<LCD_CS);
  }
@@ -60,39 +75,46 @@
  }
 
  void LCD_WriteWord (int x, int y, int length, char* word, bool align) {
+	int charStart = x + 2; // tracks starting index of current char
+	int pageIndex = y/8;
+
 	// check that coordinates are in bound, and at least one character can be written at point
 	if (x >= 0 && x < 128 - 5 && y >= 0 && y/8 < 8) { 
-		LCD_SetCommandMode();
-
-		// first byte is the 4 lower bits of column address
-		// second byte is the upper 4 bits of column address
-		SPI_MasterTransmit((x & 0x0F) + 2); // RAM column offset of 2 since 1106 has buffer of size 132 centered on screen of width 128
-		SPI_MasterTransmit(((x & 0xF0) >> 4) + 0x10);
-
-		SPI_MasterTransmit(0xB0 + y/8); // set page address
+		LCD_SetColumnStart(x + 0x2); // RAM column offset of 2 since 1106 has buffer of size 132 centered on screen of width 128
+		LCD_SetPageStart(y/8); // set page address
 
 		LCD_SetDisplayMode();
-		for (int x = 0; x < length; x++) {
+		for (int j = 0; j < length; j++) {
+			if (charStart > 130 - 5) { // check if there is room for next char
+				LCD_SetCommandMode();
+				LCD_SetPageStart((++pageIndex) % 8); // increment page, with wraparound
+				if (align) {
+					LCD_SetColumnStart(x + 0x2); // align wrapped text with initial start point
+					charStart = x + 0x2;
+				}
+				else {
+					LCD_SetColumnStart(0x2); // align wrapped text with screen
+					charStart = 0x2;
+				}
+				LCD_SetDisplayMode();
+			}
+			charStart += 6;
+
 			for (int i = 0; i < 5; i++)
-				SPI_MasterTransmit(~font[i + word[x]*5]);
+				SPI_MasterTransmit(~font[i + word[j]*5]);
 			SPI_MasterTransmit(0xFF);
 		}
 	}
  }
 
  void LCD_WriteChar (int x, int y, char c) {
-	if (x >= 0 && x < 128 - 6 && y >= 0 && y/8 < 8 && c < 255) { // check that coordinates are in bound, and that character exists
-		PORTB &= ~(1<<LCD_DC); // set in command mode
+	if (x >= 0 && x < 128 - 5 && y >= 0 && y/8 < 8 && c < 255) { // check that coordinates are in bound, and that character exists
+		LCD_SetCommandMode();
 
-		// first byte is the 4 lower bits of column address
-		// second byte is the upper 4 bits of column address
-		SPI_MasterTransmit((x & 0x0F) + 2); // RAM column offset of 2 since 1106 has buffer of size 132 centered on screen of width 128
-		SPI_MasterTransmit(((x & 0xF0) >> 4) + 0x10);
+		LCD_SetColumnStart(x + 0x2); // RAM column offset of 2 since 1106 has buffer of size 132 centered on screen of width 128
+		LCD_SetPageStart(y/8); // set page address Text is aligned with RAM pages
 
-		SPI_MasterTransmit(0xB0 + y/8); // set RAM page being written to. Text is limited aligned with pages
-
-		PORTB |= 1<<LCD_DC;
-
+		LCD_SetDisplayMode();
 		for (int i = 0; i < 5; i++)
 			SPI_MasterTransmit(~font[i + c*5]);
 		SPI_MasterTransmit(0xFF);
