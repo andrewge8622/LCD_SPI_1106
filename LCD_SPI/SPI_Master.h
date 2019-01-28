@@ -2,7 +2,7 @@
  * SPI_Master.h
  *
  * Created: 12/27/2018 7:24:50 PM
- *  Author: Andrew Ge
+ * Author: Andrew Ge
  */ 
 
 
