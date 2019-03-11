@@ -21,7 +21,7 @@
 	 // Set MOSI and SCK as outputs
 	 DDRB |= (1<<MOSI) | (1<<SCK);
 
-	 // Enable SPI as master, set clock rate to fck/16
+	 // Enable SPI, set as master, set clock rate to fck/16
 	 SPCR = (1<<SPE)|(1<<MSTR)|(1<<SPR0); // strange note to investigate: if I attempt to change DDRB after this line, it seems to fail
  }
 
